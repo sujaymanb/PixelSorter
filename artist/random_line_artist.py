@@ -24,10 +24,11 @@ class RandomLineArtist(Artist):
 
     def _init_state(self, img):
         self.rows, self.cols = img.shape[:2]
-        self.intensity = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         self.update_line()
         self.colors = np.random.randint(0, 256, size=(100, 3), dtype=np.uint8)
         self.initialized = True
+        #self.intensity = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        #self.original_img = img.copy()
 
     def update_line(self):
         self.x = np.random.randint(0, self.rows)
@@ -39,6 +40,8 @@ class RandomLineArtist(Artist):
         paths = []
         values = []
         perp_angle = self.angle + np.pi / 2
+        intensity = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        #intensity = self.intensity
 
         for px, py in line_pixels:
             current_row_vals = []
@@ -52,7 +55,7 @@ class RandomLineArtist(Artist):
                 qy = max(0, min(qy, self.cols - 1))
 
                 current_row.append((qx, qy))
-                current_row_vals.append(int(self.intensity[qx, qy]))
+                current_row_vals.append(int(intensity[qx, qy]))
 
             paths.append(current_row)
             values.append(current_row_vals)
@@ -62,8 +65,6 @@ class RandomLineArtist(Artist):
     def step(self, img):
         if not self.initialized:
             self._init_state(img)
-
-        sorted_img = img.copy()
 
         # Calculate end point of the line
         dx = int(round(np.cos(self.angle) * self.length))
@@ -85,16 +86,15 @@ class RandomLineArtist(Artist):
         else:
             color = self.colors[np.random.randint(0, len(self.colors))]
         
+        img_presort = img.copy()
         for path_i in range(len(paths[0])):
             # Get the path and values for the current path index
             path = [row[path_i] for row in paths]
             for step, (qx, qy) in enumerate(path):
                 if self.set_color:
-                    sorted_img[qx, qy] = color
+                    img[qx, qy] = color
                 else:
                     qx1, qy1 = path[sorted_indices[path_i, step]]
-                    sorted_img[qx, qy] = img[qx1, qy1]
+                    img[qx, qy] = img_presort[qx1, qy1]
 
         self.update_line()
-
-        return sorted_img

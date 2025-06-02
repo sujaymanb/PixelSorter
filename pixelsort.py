@@ -23,14 +23,14 @@ class PixelSorter:
                 artist._init_state(self.img)
 
             for i in tqdm(range(iterations)):
-                self.sorted_img = artist.step(self.sorted_img)
+                artist.step(self.sorted_img)
 
                 # Display the image every 10 iterations
                 if show and i % skip == 0:
                     cv2.imshow('Sorted Image', self.sorted_img)
                     cv2.waitKey(1)
 
-            self.img = self.sorted_img
+            #self.img = self.sorted_img
         
         return self.sorted_img
 
@@ -44,7 +44,7 @@ def main(img_path='nj.png'):
         #MultiHeadedRandomMoverArtist(max_iter=99999, brush_width=40, threshold=120, num_heads=2),
         #GridArtist(rows=24, cols=9, direction='horizontal'),
         #GridArtist(rows=12, cols=8, direction='vertical'),
-        RandomLineArtist(brush_width=40, max_len=150, min_len=25, min_angle=np.deg2rad(5), max_angle=np.deg2rad(360), set_color=False)
+        RandomLineArtist(brush_width=40, max_len=250, min_len=50, min_angle=np.deg2rad(90), max_angle=np.deg2rad(90), set_color=False)
     ]
     sorter = PixelSorter(resized_img, artists=artists)
 
