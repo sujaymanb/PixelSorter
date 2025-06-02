@@ -2,10 +2,7 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 import tyro
-from artist import RandomLineArtist
-from artist import GridArtist
-from artist import MultiHeadedRandomMoverArtist
-from artist import Artist
+from artist import Artist, RandomLineArtist, GridArtist, MultiHeadedRandomMoverArtist, RandomMoverArtist
 
 class PixelSorter:
     def __init__(self, img, artists=None):
@@ -41,10 +38,10 @@ def main(img_path='nj.png'):
 
     # Example usage:
     artists = [
-        #MultiHeadedRandomMoverArtist(max_iter=99999, brush_width=40, threshold=120, num_heads=2),
+        #RandomMoverArtist(max_iter=1500, brush_width=40, threshold=150),
         #GridArtist(rows=24, cols=9, direction='horizontal'),
         #GridArtist(rows=12, cols=8, direction='vertical'),
-        RandomLineArtist(brush_width=40, max_len=250, min_len=50, min_angle=np.deg2rad(90), max_angle=np.deg2rad(90), set_color=False)
+        RandomLineArtist(brush_width=40, max_len=175, min_len=50, min_angle=np.deg2rad(0), max_angle=np.deg2rad(360), set_color=False)
     ]
     sorter = PixelSorter(resized_img, artists=artists)
 

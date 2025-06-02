@@ -1,6 +1,7 @@
 from artist import Artist
 import numpy as np
 import cv2
+from util.line_utils import bresenham_line
 
 class RandomMoverArtist(Artist):
     def __init__(self, max_iter=2500, brush_width=30, threshold=75, set_color=False):
@@ -17,7 +18,6 @@ class RandomMoverArtist(Artist):
         self.max_len = self.rows // 8
         self.max_speed = self.max_len // 2
         self.speed = np.random.randint(1, self.max_speed)
-        self.intensity = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         self.paths = []
         self.values = []
         self.prev_row_vals = []
@@ -25,9 +25,6 @@ class RandomMoverArtist(Artist):
         self.initialized = True
 
     def step(self, img):
-        # One iteration of the random mover
-        sorted_img = img.copy()
-        # Move in a direction with speed
         dx = int(round(np.cos(self.angle) * self.speed))
         dy = int(round(np.sin(self.angle) * self.speed))
         x1 = self.x + dx
@@ -44,15 +41,15 @@ class RandomMoverArtist(Artist):
             #y1 = y + dy
             self.angle = np.arctan2(dy, dx)
 
-        # Ensure end point is within bounds
         x1 = max(0, min(x1, self.rows - 1))
         y1 = max(0, min(y1, self.cols - 1))
-
-        # Perpendicular direction (normalize to unit vector)
         perp_angle = self.angle + np.pi / 2
 
         # Get all pixels along the line
         line_pixels = list(bresenham_line(self.x, self.y, x1, y1))
+
+        intensity = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        presort_img = img.copy()
         
         # prev_row_vals = []
         for px, py in line_pixels:        
@@ -69,16 +66,11 @@ class RandomMoverArtist(Artist):
                 qy = max(0, min(qy, self.cols - 1))
 
                 current_row.append((qx, qy))
-                current_row_vals.append(int(self.intensity[qx, qy]))
+                current_row_vals.append(int(intensity[qx, qy]))
 
             self.paths.append(current_row)
             self.values.append(current_row_vals)
 
-            #if len(self.prev_row_vals) != 0:
-            #    val_change = np.mean(np.abs(np.array(current_row_vals) - np.array(self.prev_row_vals)))
-            #else:
-            #    val_change = 0
-            #self.prev_row_vals = current_row_vals
             val_change = np.mean(np.array(self.values).max(axis=0) - np.array(self.values).min(axis=0))
 
             if (val_change >= self.threshold) or (len(self.paths[0]) >= self.max_len):
@@ -98,13 +90,10 @@ class RandomMoverArtist(Artist):
                     path = [row[path_i] for row in self.paths]
                     for step, (qx, qy) in enumerate(path):
                         if self.set_color:
-                            sorted_img[qx, qy] = color
+                            img[qx, qy] = color
                         else:
                             qx1, qy1 = path[sorted_indices[path_i, step]]
-                            sorted_img[qx, qy] = img[qx1, qy1]
-
-                # use the sorted values if uncommented      
-                #intensity = cv2.cvtColor(sorted_img, cv2.COLOR_BGR2GRAY)
+                            img[qx, qy] = presort_img[qx1, qy1]
                 
                 # Reset path and values
                 self.paths = []
@@ -130,5 +119,3 @@ class RandomMoverArtist(Artist):
             self.speed = 1
         elif self.speed > self.max_speed:
             self.speed = self.max_speed
-
-        return sorted_img
